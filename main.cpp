@@ -40,14 +40,14 @@ int main()
     }
   glViewport(0, 0, 800, 600);
 
-  float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f, 1.0f, 0.0f
-  };
 
-  mesh triangle = make_mesh(vertices, sizeof(vertices)/sizeof(float), "main.v.glsl", "main.f.glsl");
+  float vertices[] = {
+                      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+                      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f
+  };
   
+  mesh triangle = make_mesh(vertices, sizeof(vertices)/sizeof(float), "main.v.glsl", "main.f.glsl");  
   glBindVertexArray(triangle.VAO);
   glUseProgram(triangle.shader_program);
   
@@ -162,8 +162,11 @@ mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fr
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, size*sizeof(float), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3*sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   unsigned int shaderProgram;
   shaderProgram = getShaderProgram("main.v.glsl", "main.f.glsl");
