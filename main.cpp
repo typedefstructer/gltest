@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include "stb_image.h"
 
 struct mesh {
   GLuint VAO;
@@ -41,15 +42,35 @@ int main()
   glViewport(0, 0, 800, 600);
 
 
+  
   float vertices[] = {
-                      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-                      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-                      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f
+                      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,   0.5f, 1.0f
   };
   
   mesh triangle = make_mesh(vertices, sizeof(vertices)/sizeof(float), "main.v.glsl", "main.f.glsl");  
   glBindVertexArray(triangle.VAO);
   glUseProgram(triangle.shader_program);
+
+  int width, height, nChannels;
+  unsigned char *data = stbi_load("container.jpg", &width, &height, &nChannels, 0);
+
+  unsigned int texture;
+  
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  stbi_image_free(data);
+
+  
   
   while(!glfwWindowShouldClose(window))
     {
@@ -163,10 +184,12 @@ mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fr
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, size*sizeof(float), vertices, GL_STATIC_DRAW);
   
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3*sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3*sizeof(float)));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6*sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   unsigned int shaderProgram;
   shaderProgram = getShaderProgram("main.v.glsl", "main.f.glsl");

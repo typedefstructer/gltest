@@ -1,1 +1,1 @@
-g++ -I ./includes/ -o main main.cpp glad.c -lGL -ldl -lglfw  
+g++ -I ./includes/ -o main main.cpp glad.c stb_image.c -lGL -ldl -lglfw  
