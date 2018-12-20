@@ -19,7 +19,7 @@ void show_info_log(GLuint object);
 void *file_contents(const char *filename, GLint *length);
 mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fragmentFile);
 
-int main()
+int main(int argc, char **argv)
 {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -44,17 +44,22 @@ int main()
 
   
   float vertices[] = {
-                      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  1.0f, 0.0f,
-                      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,   0.5f, 1.0f
+                      -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                      1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+                      -1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+                      -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+                      1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+                      1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f                    
   };
   
-  mesh triangle = make_mesh(vertices, sizeof(vertices)/sizeof(float), "main.v.glsl", "main.f.glsl");  
+  mesh triangle = make_mesh(vertices, sizeof(vertices)/sizeof(float), argv[1], "main.f.glsl");  
   glBindVertexArray(triangle.VAO);
   glUseProgram(triangle.shader_program);
 
+  GLuint timer = glGetUniformLocation(triangle.shader_program, "timer");
+  
   int width, height, nChannels;
-  unsigned char *data = stbi_load("container.jpg", &width, &height, &nChannels, 0);
+  unsigned char *data = stbi_load("hello1.tga", &width, &height, &nChannels, 0);
 
   unsigned int texture;
   
@@ -71,18 +76,27 @@ int main()
   stbi_image_free(data);
 
   
-  
+  float startTime = glfwGetTime();
+  float elapsedTime = 0;
+  float totalElapsed = 0;
   while(!glfwWindowShouldClose(window))
     {
+      startTime = glfwGetTime();
+      
       processInput(window);
 
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT);
 
-      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
     
       glfwSwapBuffers(window);
       glfwPollEvents();
+
+      elapsedTime = glfwGetTime() - startTime;     
+      totalElapsed += elapsedTime;      
+      glUniform1f(timer, totalElapsed);
+      
     }
 
   glfwTerminate();
