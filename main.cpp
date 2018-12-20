@@ -18,6 +18,7 @@ GLuint make_program(GLuint vertex_shader, GLuint fragment_shader);
 void show_info_log(GLuint object);
 void *file_contents(const char *filename, GLint *length);
 mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fragmentFile);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 
 int main(int argc, char **argv)
 {
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
       glfwTerminate();
       return -1;
     }
-
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwMakeContextCurrent(window);
 
   if(!gladLoadGLLoader((GLADloadproc)(glfwGetProcAddress)))
@@ -214,4 +215,8 @@ mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fr
   m.VAO = VAO;
   m.shader_program = shaderProgram;
   return m;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+  glViewport(0, 0, width, height);
 }
