@@ -71,8 +71,34 @@ int main(int argc, char **argv)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  width = 300;
+  height = 300;
+  stbi_image_free(data);
+
+  data = (unsigned char *)malloc(width*height*3);
+  std::cout<<width*height*3<<'\n';
+  unsigned char *row = data;
+  int counter = 0;
+  int red, green, blue;
+  while(counter < width*height){
+    red = green = blue = 0;
+    if((counter) % 3 == 0) {
+      red = 255;
+    } else if((counter)  % 3 == 1) {
+      green = 255;
+    } else if((counter) % 3 == 2) {
+      blue = 255;
+    }     
+    
+    data[counter*3] = red;
+    data[counter*3 + 1] = green;
+    data[counter*3 + 2] = blue;
+    std::cout<<counter*3<<','<<counter*3+1<<','<<counter*3+2<<std::endl;
+    counter++;
+  }
   
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
 
