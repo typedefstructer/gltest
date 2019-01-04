@@ -11,6 +11,23 @@ struct mesh {
   GLuint shader_program;
 };
 
+struct canvas {
+  unsigned char *data;
+  int width, height;
+};
+
+struct vector2 {
+  float x, y;
+};
+
+struct projectiles {
+  vector2 pos;
+  vector2 v;
+  vector2 g;
+  char r, gr, b;
+};
+
+
 void processInput(GLFWwindow *window);
 GLuint getShaderProgram(const char *vertexFile, const char *fragmentFile);
 GLuint make_shader(GLenum type, const char *filename);
@@ -19,6 +36,16 @@ void show_info_log(GLuint object);
 void *file_contents(const char *filename, GLint *length);
 mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fragmentFile);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
+
+void putpixel(canvas c, int x, int y, char r, char g, char b);
+
+canvas newcanvas(int w, int h);
+void generateStatic(canvas screen);
+void updateCanvas(canvas screen);
+
+vector2 operator+(vector2 a, vector2 b);
+vector2 operator*(float a, vector2 b);
+
 
 int main(int argc, char **argv)
 {
@@ -40,9 +67,8 @@ int main(int argc, char **argv)
     {
       return -1;
     }
+  
   glViewport(0, 0, 800, 600);
-
-
   
   float vertices[] = {
                       -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -59,68 +85,72 @@ int main(int argc, char **argv)
 
   GLuint timer = glGetUniformLocation(triangle.shader_program, "timer");
   
-  int width, height, nChannels;
-  unsigned char *data = stbi_load("hello1.tga", &width, &height, &nChannels, 0);
-
-  unsigned int texture;
-  
+  unsigned int texture;  
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
-
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  width = 300;
-  height = 300;
-  stbi_image_free(data);
-
-  data = (unsigned char *)malloc(width*height*3);
-  std::cout<<width*height*3<<'\n';
-  unsigned char *row = data;
-  int counter = 0;
-  int red, green, blue;
-  while(counter < width*height){
-    red = green = blue = 0;
-    if((counter) % 3 == 0) {
-      red = 255;
-    } else if((counter)  % 3 == 1) {
-      green = 255;
-    } else if((counter) % 3 == 2) {
-      blue = 255;
-    }     
-    
-    data[counter*3] = red;
-    data[counter*3 + 1] = green;
-    data[counter*3 + 2] = blue;
-    std::cout<<counter*3<<','<<counter*3+1<<','<<counter*3+2<<std::endl;
-    counter++;
-  }
-  
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(data);
-
-  
+  canvas screen = newcanvas(300, 300);     
   float startTime = glfwGetTime();
   float elapsedTime = 0;
   float totalElapsed = 0;
+
+  static int proj_len=2000;
+  projectiles p[proj_len];
+  int counter = 0;
+  int max_ticks = 1;
+  int ticks = max_ticks;
+  float ems = 0.0f;
+  
+  for(int i=0;i<proj_len;i++)
+    {
+      p[i].pos = { 150, 150 };
+      p[i].v = { -20 + rand()%40, -50 + rand()%100 };
+      p[i].g = { 0.0f, -2.0f};
+      p[i].r = rand()%255;
+      p[i].gr = rand()%255;
+      p[i].b = rand()%255;
+    }
+
+  
   while(!glfwWindowShouldClose(window))
     {
       startTime = glfwGetTime();
       
-      processInput(window);
-
+      processInput(window);      
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT);
 
+      //generateStatic(screen);
+
+      for(int i=0;i<proj_len;i++) {
+        if(ticks == 0) {
+          counter +=1;
+          counter = counter%proj_len;
+          ticks = max_ticks;        
+        } else {
+          ticks -= 1;
+        }
+        p[counter].pos = p[counter].pos + ems*p[counter].v + 0.5*ems*ems*p[counter].g;
+        p[counter].v = p[counter].v + ems*p[counter].g;            
+        putpixel(screen, p[counter].pos.x, p[counter].pos.y, p[counter].r, p[counter].gr, p[counter].b); 
+      }
+      updateCanvas(screen);
+
+
       glDrawArrays(GL_TRIANGLES, 0, 6);
     
-      glfwSwapBuffers(window);
-      glfwPollEvents();
+      glfwSwapBuffers(window);      
+      glfwPollEvents();     
 
-      elapsedTime = glfwGetTime() - startTime;     
+      elapsedTime = glfwGetTime() - startTime;
+
+      ems = elapsedTime;
+      std::cout<<ems<<std::endl;
+      
       totalElapsed += elapsedTime;      
       glUniform1f(timer, totalElapsed);
       
@@ -245,4 +275,55 @@ mesh make_mesh(float *vertices, int size, const char *vertexFile, const char *fr
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);
+}
+
+canvas newcanvas(int w, int h) {
+  canvas c;
+  c.width = w;
+  c.height = h;
+  c.data = (unsigned char *)malloc(w*h*3);
+  return c;
+}
+
+void putpixel(canvas c, int x, int y, char r, char g, char b) {
+  if(x >= 0 && y >= 0 && x < c.width && y < c.height) {
+    int loc = (y*c.width+x)*3;
+    c.data[loc] = r;
+    c.data[loc + 1] = g;
+    c.data[loc + 2] = b;
+  }
+}
+
+void generateStatic(canvas screen) {
+  for(int y=0;y<screen.height;y++)
+    for(int x=0;x<screen.width;x++)
+      {
+        char r = rand()%255+1;
+        char g = rand()%255+1;
+        char b = rand()%255+1;
+
+        putpixel(screen, x, y, rand()%r, rand()%g, rand()%b);
+      }
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.width, screen.height, 0, GL_RGB, GL_UNSIGNED_BYTE, screen.data);  
+  glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void updateCanvas(canvas screen) {
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.width, screen.height, 0, GL_RGB, GL_UNSIGNED_BYTE, screen.data);  
+  glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+vector2 operator+(vector2 a, vector2 b) {
+  vector2 c;
+  c.x = a.x + b.x;
+  c.y = a.y + b.y;
+  return c;
+}
+
+vector2 operator*(float a, vector2 b) {
+  vector2 c;
+  c.x = a*b.x;
+  c.y = a*b.y;
+  return c;
 }

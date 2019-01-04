@@ -29,5 +29,5 @@ void main()
     
   gl_Position = vec4(window_scale*aPos.xyz, 1.0);
   vertexColor = vec4(aColor.xyz , 1.0);
-  texCoord = aTexCoord;
+  texCoord = vec2(aTexCoord.x, -aTexCoord.y);
 }
