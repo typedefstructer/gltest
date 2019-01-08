@@ -20,6 +20,10 @@ struct vector2 {
   float x, y;
 };
 
+struct vector3 {
+  float x, y, z;
+};
+
 struct projectiles {
   vector2 pos;
   vector2 v;
@@ -42,7 +46,8 @@ void putpixel(canvas c, int x, int y, char r, char g, char b);
 canvas newcanvas(int w, int h);
 void generateStatic(canvas screen);
 void updateCanvas(canvas screen);
-
+vector3 operator-(vector3 a, vector3 b);
+float dot(vector3 a, vector3 b);
 vector2 operator+(vector2 a, vector2 b);
 vector2 operator*(float a, vector2 b);
 
@@ -93,11 +98,33 @@ int main(int argc, char **argv)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  canvas screen = newcanvas(300, 300);     
+  canvas screen = newcanvas(500, 500);     
   float startTime = glfwGetTime();
   float elapsedTime = 0;
   float totalElapsed = 0;
   float ems = 0;
+  vector3 Camera = { 0, 0.0, 2.0f };
+  vector3 Origin = { 0, 0, 0 };
+
+  
+  for(int y=0;y<screen.height;y++) {
+    for(int x=0;x<screen.width;x++) {
+      vector3 sp = { -7.0 + x*(14.0f/500.0f), -7.0 + y*(14.0f/500.0f), 5.0f };      
+      vector3 dir = sp - Camera;
+
+      float a = dot(dir, dir);
+      float b = 2*dot(Camera, dir);
+      float c = dot(Camera, Camera) - 1;
+
+      float discriminant = b*b - 4*a*c;
+      if(discriminant >= 0) {
+        putpixel(screen, x, y, 255, 0, 0);
+      }      
+    }
+  }
+    
+  updateCanvas(screen);  
+  
   while(!glfwWindowShouldClose(window))
     {
       startTime = glfwGetTime();
@@ -106,8 +133,8 @@ int main(int argc, char **argv)
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT);
 
-      generateStatic(screen);
-      //updateCanvas(screen);
+      //generateStatic(screen);
+
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
     
@@ -293,4 +320,16 @@ vector2 operator*(float a, vector2 b) {
   c.x = a*b.x;
   c.y = a*b.y;
   return c;
+}
+
+vector3 operator-(vector3 a, vector3 b) {
+  vector3 c;
+  c.x = a.x - b.x;
+  c.y = a.y - b.y;
+  c.z = a.z - b.z;
+  return c;
+}
+
+float dot(vector3 a, vector3 b) {
+  return a.x*b.x + a.y*b.y + a.z*b.z;
 }
