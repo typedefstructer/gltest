@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "stb_image.h"
+#include <math.h>
 
 struct mesh {
   GLuint VAO;
@@ -45,6 +46,7 @@ void putpixel(canvas c, int x, int y, char r, char g, char b);
 
 canvas newcanvas(int w, int h);
 void generateStatic(canvas screen);
+void clearScreen(canvas screen, char r, char g, char b);
 void updateCanvas(canvas screen);
 vector3 operator-(vector3 a, vector3 b);
 float dot(vector3 a, vector3 b);
@@ -98,18 +100,19 @@ int main(int argc, char **argv)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  canvas screen = newcanvas(500, 500);     
+  canvas screen = newcanvas(1000, 1000);     
   float startTime = glfwGetTime();
   float elapsedTime = 0;
   float totalElapsed = 0;
   float ems = 0;
-  vector3 Camera = { 0, 0.0, 2.0f };
+  vector3 Camera = { 0, 0, -5.0f };
   vector3 Origin = { 0, 0, 0 };
 
+  clearScreen(screen, 0, 0, 0);
   
   for(int y=0;y<screen.height;y++) {
     for(int x=0;x<screen.width;x++) {
-      vector3 sp = { -7.0 + x*(14.0f/500.0f), -7.0 + y*(14.0f/500.0f), 5.0f };      
+      vector3 sp = { -3.5 + x*(7.0f/screen.width), -3.0 + y*(7.0f/screen.height), 5.0f };      
       vector3 dir = sp - Camera;
 
       float a = dot(dir, dir);
@@ -118,7 +121,13 @@ int main(int argc, char **argv)
 
       float discriminant = b*b - 4*a*c;
       if(discriminant >= 0) {
-        putpixel(screen, x, y, 255, 0, 0);
+        char r = 255;       
+
+        if(( ((int)floor(sp.x)) + ((int)floor(sp.y)) )  % 2 == 0) r = 255;        
+        else r = 155;
+
+        
+        putpixel(screen, x, y, r, 0, 0);        
       }      
     }
   }
@@ -286,6 +295,14 @@ void putpixel(canvas c, int x, int y, char r, char g, char b) {
     c.data[loc + 1] = g;
     c.data[loc + 2] = b;
   }
+}
+
+void clearScreen(canvas screen, char r, char g, char b) {
+  for(int y=0;y<screen.height;y++)
+    for(int x=0;x<screen.width;x++)
+      {       
+        putpixel(screen, x, y, r, g, b);
+      }
 }
 
 void generateStatic(canvas screen) {
