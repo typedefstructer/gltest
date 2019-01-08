@@ -97,25 +97,7 @@ int main(int argc, char **argv)
   float startTime = glfwGetTime();
   float elapsedTime = 0;
   float totalElapsed = 0;
-
-  static int proj_len=2000;
-  projectiles p[proj_len];
-  int counter = 0;
-  int max_ticks = 1;
-  int ticks = max_ticks;
-  float ems = 0.0f;
-  
-  for(int i=0;i<proj_len;i++)
-    {
-      p[i].pos = { 150, 150 };
-      p[i].v = { -20 + rand()%40, -50 + rand()%100 };
-      p[i].g = { 0.0f, -2.0f};
-      p[i].r = rand()%255;
-      p[i].gr = rand()%255;
-      p[i].b = rand()%255;
-    }
-
-  
+  float ems = 0;
   while(!glfwWindowShouldClose(window))
     {
       startTime = glfwGetTime();
@@ -124,22 +106,8 @@ int main(int argc, char **argv)
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT);
 
-      //generateStatic(screen);
-
-      for(int i=0;i<proj_len;i++) {
-        if(ticks == 0) {
-          counter +=1;
-          counter = counter%proj_len;
-          ticks = max_ticks;        
-        } else {
-          ticks -= 1;
-        }
-        p[counter].pos = p[counter].pos + ems*p[counter].v + 0.5*ems*ems*p[counter].g;
-        p[counter].v = p[counter].v + ems*p[counter].g;            
-        putpixel(screen, p[counter].pos.x, p[counter].pos.y, p[counter].r, p[counter].gr, p[counter].b); 
-      }
-      updateCanvas(screen);
-
+      generateStatic(screen);
+      //updateCanvas(screen);
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
     
@@ -152,8 +120,7 @@ int main(int argc, char **argv)
       std::cout<<ems<<std::endl;
       
       totalElapsed += elapsedTime;      
-      glUniform1f(timer, totalElapsed);
-      
+      glUniform1f(timer, totalElapsed);      
     }
 
   glfwTerminate();
@@ -302,7 +269,7 @@ void generateStatic(canvas screen) {
         char g = rand()%255+1;
         char b = rand()%255+1;
 
-        putpixel(screen, x, y, rand()%r, rand()%g, rand()%b);
+        putpixel(screen, x, y, r, r, r);
       }
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.width, screen.height, 0, GL_RGB, GL_UNSIGNED_BYTE, screen.data);  
